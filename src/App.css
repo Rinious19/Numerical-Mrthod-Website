@@ -1,0 +1,7 @@
+body {
+  padding-top: 11vh; /* เท่ากับความสูงของ navbar */
+}
+.table-equal-width {
+  table-layout: fixed; /* ทำให้ Column ใน Table กว้างเท่าๆ กัน */
+  width: 100%;
+}

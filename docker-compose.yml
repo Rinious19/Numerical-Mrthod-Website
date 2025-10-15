@@ -1,0 +1,59 @@
+#@ เวอร์ชันของ Docker Compose
+version: '3.8'
+
+#@ ประกาศ "ตู้คอนเทนเนอร์" ทั้งหมดที่โปรเจคเราต้องใช้
+services:
+  #* 1. ตู้คอนเทนเนอร์สำหรับ Frontend (React/VITE)
+  frontend:
+    # บอกให้สร้างจาก Dockerfile ที่อยู่ในโฟลเดอร์ปัจจุบัน (.)
+    build: .
+    # ตั้งชื่อให้ตู้คอนเทนเนอร์
+    container_name: numerical-frontend
+    # "เชื่อมประตู": เชื่อมประตูหมายเลข 5173 ของเครื่องคุณ เข้ากับประตูหมายเลข 80 ของตู้นี้ (ที่ Nginx เปิดไว้)
+    ports:
+      - "5173:80"
+
+  #* 2. ตู้คอนเทนเนอร์สำหรับ Backend (Node.js/Express)
+  backend:
+    # บอกให้สร้างจาก Dockerfile ที่อยู่ในโฟลเดอร์ ./backend
+    build: ./backend
+    container_name: numerical-backend
+    ports:
+      - "8000:8000"
+    # "ตั้งค่าสภาพแวดล้อม" ให้กับโปรแกรมในตู้นี้
+    environment:
+      #! สำคัญมาก: บอกให้ Server ไปคุยกับ Database ที่ชื่อ "mongo" (ไม่ใช่ localhost)
+      # Docker Compose จะสร้าง Network ภายในให้ตู้ทั้งหมดคุยกันผ่านชื่อ Service ได้
+      - MONGO_URI=mongodb://mongo:27017/numericalMethodsDB
+      # บอก Server ว่าให้รับคำขอจาก Frontend ที่ Port 5173
+      - CLIENT_URL=http://localhost:5173
+    # "เงื่อนไขการเริ่มทำงาน": บอกให้ตู้นี้รอจนกว่าตู้ "mongo" จะพร้อมทำงานก่อน
+    depends_on:
+      - mongo
+
+  #* 3. ตู้คอนเทนเนอร์สำหรับ Database (MongoDB)
+  mongo:
+    # "ไม่ต้องสร้างเอง": บอกให้ไปดึง "ตู้สำเร็จรูป" ของ MongoDB เวอร์ชันล่าสุดมาจาก Docker Hub
+    image: mongo
+    container_name: numerical-mongodb
+    ports:
+      - "27017:27017"
+    # "สร้างพื้นที่เก็บของถาวร": บอกให้ข้อมูลทั้งหมดของ MongoDB ถูกเก็บไว้ใน Volume ชื่อ mongo-data
+    # ทำให้ถึงแม้เราจะลบตู้คอนเทนเนอร์ทิ้ง ข้อมูลของเราก็จะไม่หายไป
+    volumes:
+      - mongo-data:/data/db
+
+#@ ประกาศ "พื้นที่เก็บของถาวร" ที่จะใช้
+volumes:
+  mongo-data:
+
+#@ ขั้นตอนสุดท้าย: รันทุกอย่างด้วยคำสั่งเดียว!**
+#* หลังจากที่เราสร้างไฟล์ทั้ง 3 ไฟล์เสร็จเรียบร้อยแล้ว:
+#* 1. เปิด Terminal ใน VS Code (ต้องแน่ใจว่าอยู่ที่ Root ของโปรเจค ไม่ใช่ใน folder backend)
+#* 2. รันคำสั่ง: docker-compose up --build
+#*            ● docker-compose up: คือคำสั่ง "เริ่มทำงานตามแผนผัง"
+#*            ● --build: คือคำสั่งพิเศษที่บอกว่า "ถ้ามีการแก้ไข Dockerfile ให้สร้างตู้คอนเทนเนอร์ใหม่
+#*                       ด้วยนะ" (ควรใช้ในครั้งแรก)
+#* 3. วิธีหยุด: เมื่อต้องการหยุดการทำงานทั้งหมด ให้กลับไปที่ Terminal แล้วกด Ctrl + C แล้วตามด้วยคำสั่ง 
+#*    docker-compose down เพื่อปิดและลบตู้คอนเทนเนอร์ทั้งหมด
+    
