@@ -1,5 +1,5 @@
 import React from "react";
-import BaseInterpolation from "../Interpolation/BaseInterpolation";
+import BaseInterpolation from "../interpolation/BaseInterpolation";
 import { Form, Button, Row, Col, InputGroup, Card } from "react-bootstrap";
 import Plot from "react-plotly.js";
 import { MathJax } from "better-react-mathjax";
